@@ -76,16 +76,36 @@ def main():
             print("-> RDP retornou vértices adicionais; possível ocorrência de spikes.")
 
     if valid_candidates:
-        img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        cv2.drawContours(img_color, [valid_candidates[0]], -1, (0, 255, 0), 2)
+        img_contour = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        cv2.drawContours(img_contour, [valid_candidates[0]], -1, (0, 255, 0), 2)
+
+        img_rdp = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        cv2.polylines(img_rdp, [rdp_approximations[0]], True, (0, 255, 255), 2)
 
         for point in rdp_approximations[0]:
-            cv2.circle(img_color, (point[0][0], point[0][1]), 8, (0, 0, 255), 15)
+            cv2.circle(img_rdp, (point[0][0], point[0][1]), 8, (0, 0, 255), 15)
 
-        plt.figure(figsize=(10, 8))
-        plt.title(f"Resultado RDP: {len(rdp_approximations[0])} vértices")
-        plt.imshow(cv2.cvtColor(img_color, cv2.COLOR_BGR2RGB))
-        plt.axis("off")
+        fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+        stages = [
+            (img, "1. Imagem original", "gray"),
+            (thresh, "2. Threshold adaptativo", "gray"),
+            (closed_image, "3. Fechamento morfológico", "gray"),
+            (dilated_image, "4. Dilatação", "gray"),
+            (cv2.cvtColor(img_contour, cv2.COLOR_BGR2RGB), "5. Contorno entregue ao RDP", None),
+            (
+                cv2.cvtColor(img_rdp, cv2.COLOR_BGR2RGB),
+                f"6. RDP: {len(rdp_approximations[0])} vértices",
+                None,
+            ),
+        ]
+
+        for axis, (stage_image, title, color_map) in zip(axes.flat, stages):
+            axis.imshow(stage_image, cmap=color_map)
+            axis.set_title(title)
+            axis.axis("off")
+
+        fig.suptitle("Pipeline de visualização do RDP", fontsize=18)
+        plt.tight_layout()
         plt.show()
     else:
         print("Nenhum contorno válido passou pelos critérios de área mínima e máxima.")

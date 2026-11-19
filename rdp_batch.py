@@ -41,15 +41,8 @@ def process_image(image_path: Path, output_path: Path) -> tuple[bool, int]:
     img = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
     if img is None:
         raise ValueError("Imagem não carregada")
-
-    thresh = cv2.adaptiveThreshold(
-        img,
-        255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY_INV,
-        71,
-        2,
-    )
+    blur = cv2.GaussianBlur(img, (5, 5), 0)
+    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     morphology_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
     dilating_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     closed_image = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, morphology_kernel)
